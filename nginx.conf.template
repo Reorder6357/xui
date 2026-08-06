@@ -29,7 +29,7 @@ http {
             proxy_set_header X-Forwarded-Proto $scheme;
         }
 
-        # All other paths → Main inbound port (8080)
+        # All other paths → Main inbound port (8081)
         # This allows ANY path the user creates in the panel
         location / {
             proxy_pass http://127.0.0.1:${INBOUND_PORT};

@@ -1,0 +1,71 @@
+worker_processes 1;
+
+events { worker_connections 1024; }
+
+http {
+    server {
+        listen ${NGINX_PORT};
+        server_name _;
+
+        # Panel access
+        location ${PANEL_PATH} {
+            proxy_pass http://127.0.0.1:${XUI_PORT}${PANEL_PATH};
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        # Subscription links
+        location ${SUB_PATH} {
+            proxy_pass http://127.0.0.1:${SUB_PORT}${SUB_PATH};
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        # Main inbound (default path /)
+        # You can create multiple inbounds with different paths in the panel
+        location / {
+            proxy_pass http://127.0.0.1:${INBOUND_PORT};
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        # Optional: Extra paths for multiple inbounds (example)
+        # You can add more like this in the panel with different paths
+        location /vless {
+            proxy_pass http://127.0.0.1:${INBOUND_PORT};
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host $host;
+        }
+
+        location /vmess {
+            proxy_pass http://127.0.0.1:${INBOUND_PORT};
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host $host;
+        }
+
+        location /trojan {
+            proxy_pass http://127.0.0.1:${INBOUND_PORT};
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host $host;
+        }
+    }
+}

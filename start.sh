@@ -3,25 +3,19 @@ set -e
 
 echo "🚀 Starting 3x-ui + nginx for Railway..."
 
-# Railway provides $PORT automatically
-if [ -z "$PORT" ]; then
-    echo "⚠️  WARNING: \$PORT not set. Using fallback 3000"
-    export NGINX_PORT=3000
-else
-    export NGINX_PORT=$PORT
-fi
+# Use a fixed internal port for nginx to avoid conflict
+export NGINX_INTERNAL_PORT=3000
 
-echo "📡 nginx will listen on Railway port: $NGINX_PORT"
+echo "📡 nginx will listen internally on port: $NGINX_INTERNAL_PORT"
 
 export PANEL_PATH=${PANEL_PATH:-/managepanel/}
 export SUB_PATH=${SUB_PATH:-/sub/}
 export XUI_PORT=${XUI_PORT:-2053}
 export SUB_PORT=${SUB_PORT:-2096}
-export INBOUND_PORT=${INBOUND_PORT:-8081}   # ← Changed to 8081 to avoid conflict
+export INBOUND_PORT=${INBOUND_PORT:-8081}
 
 cd /usr/local/x-ui
 
-# Apply settings ONLY on first run
 if [ ! -f /etc/x-ui/db.sqlite3 ]; then
     echo "🔧 First run - applying initial settings..."
     ./x-ui setting -port $XUI_PORT -webBasePath "$PANEL_PATH" || true
@@ -32,7 +26,7 @@ fi
 
 echo "🔧 Generating nginx config..."
 
-envsubst '${NGINX_PORT} ${PANEL_PATH} ${SUB_PATH} ${XUI_PORT} ${SUB_PORT} ${INBOUND_PORT}' \
+envsubst '${NGINX_INTERNAL_PORT} ${PANEL_PATH} ${SUB_PATH} ${XUI_PORT} ${SUB_PORT} ${INBOUND_PORT}' \
     < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 
 echo "▶️ Starting 3x-ui in background..."
@@ -40,6 +34,6 @@ echo "▶️ Starting 3x-ui in background..."
 
 sleep 4
 
-echo "▶️ Starting nginx on port $NGINX_PORT..."
+echo "▶️ Starting nginx on internal port $NGINX_INTERNAL_PORT..."
 nginx -t
 exec nginx -g "daemon off;"
